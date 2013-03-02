@@ -175,7 +175,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     
     /**
      * @return string Http response body (json)
-     * @link https://www.dropbox.com/developers/reference/api#account-info
+     * @link https://www.dropbox.com/developers/core/api#account-info
      */
     public function accountInfo() 
     {   
@@ -191,7 +191,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
      * @param string $path
      * @param string $rev
      * @return Zend_Http_Response
-     * @link https://www.dropbox.com/developers/reference/api#files-GET
+     * @link https://www.dropbox.com/developers/core/api#files-GET
      */
     public function fileGet($path, $rev = null) 
     {
@@ -213,7 +213,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
      * @param string $path
      * @param array $params
      * @return string json results
-     * @link https://www.dropbox.com/developers/reference/api#files_put
+     * @link https://www.dropbox.com/developers/core/api#files_put
      */
     public function filePut($file, $path = '', $overwrite = false) 
     {
@@ -251,7 +251,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
      * @param boolean $include_deleted
      * @param string $rev
      * @return string json
-     * @link https://www.dropbox.com/developers/reference/api#metadata
+     * @link https://www.dropbox.com/developers/core/api#metadata
      */
     public function fileMetadata($path, $limit = 10000, $hash = null, $list = true, $include_deleted = false, $rev = null)
     {
@@ -281,7 +281,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
      * @param string $path
      * @param integer $rev_limit
      * @return string json
-     * @link https://www.dropbox.com/developers/reference/api#revisions
+     * @link https://www.dropbox.com/developers/core/api#revisions
      */
     public function fileRevision($path, $rev_limit = 25) 
     {
@@ -302,7 +302,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
      * @param string $path
      * @param string $rev
      * @return string json
-     * @link https://www.dropbox.com/developers/reference/api#restore
+     * @link https://www.dropbox.com/developers/core/api#restore
      */
     public function fileRestore($path, $rev)
     {
@@ -325,7 +325,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
      * @param integer $file_limit
      * @param boolean $include_deleted
      * @return string json
-     * @link https://www.dropbox.com/developers/reference/api#search
+     * @link https://www.dropbox.com/developers/core/api#search
      */
     public function fileSearch($path, $query, $file_limit = 25, $include_deleted = false)
     {
@@ -347,7 +347,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     /**
      * @param string $path
      * @return string json
-     * @link https://www.dropbox.com/developers/reference/api#shares
+     * @link https://www.dropbox.com/developers/core/api#shares
      */
     public function fileShares($path)
     {
@@ -363,7 +363,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     /**
      * @param string $path
      * @return string json
-     * @link https://www.dropbox.com/developers/reference/api#media
+     * @link https://www.dropbox.com/developers/core/api#media
      */
     public function fileMedia($path)
     {
@@ -381,7 +381,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
      * @param string $format
      * @param string $size
      * @return Zend_Http_Response
-     * @link https://www.dropbox.com/developers/reference/api#thumbnails
+     * @link https://www.dropbox.com/developers/core/api#thumbnails
      */
     public function fileThumbnails($path, $format = 'jpeg', $size = 'small')
     {
@@ -410,7 +410,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
      * @param string $from_path
      * @param string $to_path
      * @return string json
-     * @link https://www.dropbox.com/developers/reference/api#fileops-copy
+     * @link https://www.dropbox.com/developers/core/api#fileops-copy
      */
     public function fileOpsCopy($from_path, $to_path)
     {
@@ -432,7 +432,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     /**
      * @param string $path
      * @return string json
-     * @link https://www.dropbox.com/developers/reference/api#fileops-create-folder
+     * @link https://www.dropbox.com/developers/core/api#fileops-create-folder
      */
     public function fileOpsCreateFolder($path)
     {
@@ -453,7 +453,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     /**
      * @param string $path
      * @return string json
-     * @link https://www.dropbox.com/developers/reference/api#fileops-delete
+     * @link https://www.dropbox.com/developers/core/api#fileops-delete
      */
     public function fileOpsDelete($path)
     {
@@ -475,7 +475,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
      * @param string $from_path
      * @param string $to_path
      * @return string json
-     * @link https://www.dropbox.com/developers/reference/api#fileops-move
+     * @link https://www.dropbox.com/developers/core/api#fileops-move
      */
     public function fileOpsMove($from_path, $to_path)
     {

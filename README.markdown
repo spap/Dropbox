@@ -43,46 +43,46 @@ $accessToken = $dropbox->getAccessToken($query, $requestToken);
 ###API Call###
 ```php
 <?php
-// https://www.dropbox.com/developers/reference/api#account-info
+// https://www.dropbox.com/developers/core/api#account-info
 $dropbox->accountInfo(); // return json
 
-// https://www.dropbox.com/developers/reference/api#files-GET
+// https://www.dropbox.com/developers/core/api#files-GET
 $dropbox->fileGet($path, $rev);
 
-// https://www.dropbox.com/developers/reference/api#files_put
+// https://www.dropbox.com/developers/core/api#files_put
 $dropbox->filePut($file, $path, $overwrite);
 
-// https://www.dropbox.com/developers/reference/api#metadata
+// https://www.dropbox.com/developers/core/api#metadata
 $dropbox->fileMetadata($path, $limit, $hash, $list, $include_deleted, $rev);
 
-// https://www.dropbox.com/developers/reference/api#revisions
+// https://www.dropbox.com/developers/core/api#revisions
 $dropbox->fileRevision($path, $rev_limit);
 
-// https://www.dropbox.com/developers/reference/api#restore
+// https://www.dropbox.com/developers/core/api#restore
 $dropbox->fileRestore($path, $rev);
 
-// https://www.dropbox.com/developers/reference/api#search
+// https://www.dropbox.com/developers/core/api#search
 $dropbox->fileSearch($path, $query, $file_limit, $include_deleted);
 
-// https://www.dropbox.com/developers/reference/api#shares
+// https://www.dropbox.com/developers/core/api#shares
 $dropbox->fileShares($path);
 
-// https://www.dropbox.com/developers/reference/api#media
+// https://www.dropbox.com/developers/core/api#media
 $dropbox->fileMedia($path);
 
-// https://www.dropbox.com/developers/reference/api#thumbnails
+// https://www.dropbox.com/developers/core/api#thumbnails
 $dropbox->fileThumbnails($path, $format, $size);
 
-// https://www.dropbox.com/developers/reference/api#fileops-copy
+// https://www.dropbox.com/developers/core/api#fileops-copy
 $dropbox->fileOpsCopy($from_path, $to_path);
 
-// https://www.dropbox.com/developers/reference/api#fileops-create-folder
+// https://www.dropbox.com/developers/core/api#fileops-create-folder
 $dropbox->fileOpsCreateFolder($path);
 
-// https://www.dropbox.com/developers/reference/api#fileops-delete
+// https://www.dropbox.com/developers/core/api#fileops-delete
 $dropbox->fileOpsDelete($path);
 
-// https://www.dropbox.com/developers/reference/api#fileops-move
+// https://www.dropbox.com/developers/core/api#fileops-move
 $dropbox->fileOpsMove($from_path, $to_path);
 ```
 
