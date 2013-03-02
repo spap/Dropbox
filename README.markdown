@@ -46,6 +46,9 @@ $accessToken = $dropbox->getAccessToken($query, $requestToken);
 // https://www.dropbox.com/developers/core/api#account-info
 $dropbox->accountInfo(); // return json
 
+// https://www.dropbox.com/developers/core/api#delta
+$dropbox->delta($cursor);
+
 // https://www.dropbox.com/developers/core/api#files-GET
 $dropbox->fileGet($path, $rev);
 

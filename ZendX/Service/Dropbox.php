@@ -13,16 +13,17 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
 {
     const ROOT_DROPBOX = 'dropbox';
     const ROOT_SANDBOX = 'sandbox';
-    
+
     const BASE_URI_API      = 'https://api.dropbox.com/1';
     const BASE_URI_CONTENT  = 'https://api-content.dropbox.com/1';
     const BASE_URI_WWW      = 'https://www.dropbox.com/1';
-    
+
     const ACCESS_TOKEN_PATH  = '/oauth/access_token';
     const AUTHORIZE_PATH     = '/oauth/authorize';
     const REQUEST_TOKEN_PATH = '/oauth/request_token';
-    
+
     const ACCOUNT_INFO_PATH      = '/account/info';
+    const DELTA_PATH             = '/delta';
     const FILES_MEDIA_PATH       = '/media';
     const FILES_METADATA_PATH    = '/metadata';
     const FILES_PATH             = '/files';
@@ -32,46 +33,47 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     const FILES_SEARCH_PATH      = '/search';
     const FILES_SHARES_PATH      = '/shares';
     const FILES_THUMBNAILS_PATH  = '/thumbnails';
-    
+
+
     const FILEOPS_COPY_PATH          = '/fileops/copy';
     const FILEOPS_CREATE_FOLDER_PATH = '/fileops/create_folder';
     const FILEOPS_DELETE_PATH        = '/fileops/delete';
     const FILEOPS_MOVE_PATH          = '/fileops/move';
-    
+
     /**
      * Dropbox filesize limit = 150MB (150 * 1024 * 1024)
      */
     const DROPBOX_SIZE_LIMIT = 157286400;
-    
+
     /**
      * @var Zend_Oauth_Client
      */
     protected $_localHttpClient = null;
-    
+
     /**
      * @var string
      */
     protected $_dropboxRoot = null;
-    
+
     /**
      * @var Zend_Http_CookieJar
      */
     protected $_cookieJar = null;
-    
+
     /**
      * Zend_Oauth Consumer
      *
      * @var Zend_Oauth_Consumer
      */
     protected $_oauthConsumer = null;
-    
+
     /**
      * Options passed to constructor
      *
      * @var array
      */
     protected $_options = array();
-    
+
     /**
      * @param array|Zend_Config $options {@see Zend_Oauth_Config::setOptions()}
      * @param Zend_Oauth_Consumer $consumer 
@@ -85,16 +87,16 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
         if (! is_array($options)) {
             $options = array();
         }
-        
+
         if(isset($options['root'])) {
             $this->setDropboxRoot($options['root']);
             unset($options['root']);
         } else {
             $this->setDropboxRoot(self::ROOT_DROPBOX);
         }
-        
+
         $this->_options = $options;
-        
+
         if (isset($options['accessToken']) && $options['accessToken'] instanceof Zend_Oauth_Token_Access) {
             $this->setLocalHttpClient($options['accessToken']->getHttpClient($options));
         } else {
@@ -109,7 +111,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
             }
         }
     }
-    
+
     /**
      * Dropbox root must be 'dropbox' or 'sandbox'
      * 
@@ -120,13 +122,13 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     {
         if($dropboxRoot !== self::ROOT_DROPBOX && $dropboxRoot !== self::ROOT_SANDBOX) {
             throw new Zend_Rest_Exception(sprintf("Dropbox root name '%s' is not valid. 
-                                                   Valid name is '%s' or '%s'", 
-                                                   $dropboxRoot, self::ROOT_DROPBOX, self::ROOT_SANDBOX));
+                Valid name is '%s' or '%s'", 
+                $dropboxRoot, self::ROOT_DROPBOX, self::ROOT_SANDBOX));
         }
-        
+
         $this->_dropboxRoot = $dropboxRoot;
     }
-    
+
     /**
      * @return string Dropbox root folder
      */
@@ -134,7 +136,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     {
         return $this->_dropboxRoot;
     }
-    
+
     /**
      * Set local HTTP client as distinct from the static HTTP client
      * as inherited from Zend_Rest_Client.
@@ -159,7 +161,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     {
         return $this->_localHttpClient;
     }
-    
+
     /**
      * Checks for an authorised state
      *
@@ -172,21 +174,41 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
         }
         return false;
     }
-    
+
     /**
      * @return string Http response body (json)
      * @link https://www.dropbox.com/developers/core/api#account-info
      */
-    public function accountInfo() 
-    {   
+    public function accountInfo()
+    {
         $this->_init();
-        
+
         $uri      = self::BASE_URI_API . self::ACCOUNT_INFO_PATH;
         $request  = $this->_get($uri);
-        
+
         return $request->getBody();
     }
-    
+
+    /**
+     * @param string $cursor
+     * @return string json
+     * @link https://www.dropbox.com/developers/core/api#delta
+     */
+    public function delta($cursor=null)
+    {
+        $this->_init();
+
+        $uri = self::BASE_URI_API . self::DELTA_PATH;
+
+        $params = array(
+            'cursor'  => (is_string($cursor)) ? $cursor : null
+        );
+
+        $request = $this->_post($uri, $params);
+
+        return $request->getBody();
+    }
+
     /**
      * @param string $path
      * @param string $rev
@@ -196,18 +218,18 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     public function fileGet($path, $rev = null) 
     {
         $this->_init();
-        
+
         $uri = self::BASE_URI_CONTENT . self::FILES_PATH . '/' . $this->getDropboxRoot() . $this->_preparePath($path);
-        
+
         $params = array(
             'rev'  => (is_string($rev)) ? $rev : null
         );
-        
+
         $request  = $this->_get($uri, $params);
-        
+
         return $request;
     }
-    
+
     /**
      * @param string $file File absolute path
      * @param string $path
@@ -221,28 +243,28 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
         $file = str_replace('\\', '/', $file);
         if(filesize($file) < self::DROPBOX_SIZE_LIMIT && is_readable($file)) {
             $uri = self::BASE_URI_CONTENT . self::FILES_PUT_PATH  . '/' . $this->getDropboxRoot() . $this->_preparePath($path)
-                   . '/' .basename($file);
-            
+                . '/' .basename($file);
+
             $data = @fopen($file, 'r');
-            
+
             $params = array(
                 'overwrite' => (string)$overwrite,
             );
-            
+
             $request = $this->getLocalHttpClient()
-                            ->setUri($uri)
-                            ->setRawData($data, mime_content_type($file))
-                            // param=val - The URL-encoded parameters for this request. 
-                            // They cannot be sent in the request body.
-                            ->setParameterGet($params)
-                            ->request(Zend_Oauth_Client::PUT);
-            
+                ->setUri($uri)
+                ->setRawData($data, mime_content_type($file))
+                // param=val - The URL-encoded parameters for this request. 
+                // They cannot be sent in the request body.
+                ->setParameterGet($params)
+                ->request(Zend_Oauth_Client::PUT);
+
             return $request->getBody();
         } else {
             throw new Zend_Oauth_Exception(sprintf("Filesize '%d' bytes for '%s' is too large", filesize($file), basename($file)));
         }
     }
-    
+
     /**
      * @param string $path
      * @param integer $limit
@@ -256,9 +278,9 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     public function fileMetadata($path, $limit = 10000, $hash = null, $list = true, $include_deleted = false, $rev = null)
     {
         $this->_init();
-        
+
         $uri = self::BASE_URI_API . self::FILES_METADATA_PATH . '/' . $this->getDropboxRoot() . $this->_preparePath($path);
-        
+
         /**
          * Params settings from {@link https://github.com/BenTheDesigner/Dropbox/blob/master/Dropbox/API.php#L137-143}
          * @author Ben Tadiar <ben@handcraftedbyben.co.uk>
@@ -271,12 +293,12 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
             'include_deleted'   => (int)$include_deleted,
             'rev'               => (is_string($rev)) ? $rev : null,
         );
-        
+
         $request = $this->_get($uri, $params);
-        
+
         return $request->getBody();
     }
-    
+
     /**
      * @param string $path
      * @param integer $rev_limit
@@ -286,18 +308,18 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     public function fileRevision($path, $rev_limit = 25) 
     {
         $this->_init();
-        
+
         $uri = self::BASE_URI_API . self::FILES_REVISIONS_PATH . '/' . $this->getDropboxRoot() . $this->_preparePath($path);
-        
+
         $params = array(
             'rev_limit'  => ($rev_limit < 1) ? 1 : (($rev_limit > 1000) ? 1000 : (int) $rev_limit),
         );
-        
+
         $request = $this->_get($uri, $params);
-        
+
         return $request->getBody();
     }
-    
+
     /**
      * @param string $path
      * @param string $rev
@@ -307,18 +329,18 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     public function fileRestore($path, $rev)
     {
         $this->_init();
-        
+
         $uri = self::BASE_URI_API . self::FILES_RESTORE_PATH . '/' . $this->getDropboxRoot() . $this->_preparePath($path);
-        
+
         $params = array(
             'rev' => $rev
         );
-        
+
         $request = $this->_post($uri, $params);
-        
+
         return $request->getBody();
     }
-    
+
     /**
      * @param string $path
      * @param string $query
@@ -330,20 +352,20 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     public function fileSearch($path, $query, $file_limit = 25, $include_deleted = false)
     {
         $this->_init();
-        
+
         $uri = self::BASE_URI_API . self::FILES_SEARCH_PATH . '/' . $this->getDropboxRoot() . $this->_preparePath($path);
-        
+
         $params = array(
             'query'           => (string)$query,
             'file_limit'      => ($file_limit < 1) ? 1 : (($file_limit > 1000) ? 1000 : (int) $file_limit),
             'include_deleted' => (int)$include_deleted
         );
-        
+
         $request = $this->_post($uri, $params);
-        
+
         return $request->getBody();
     }
-    
+
     /**
      * @param string $path
      * @return string json
@@ -352,14 +374,14 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     public function fileShares($path)
     {
         $this->_init();
-        
+
         $uri = self::BASE_URI_API . self::FILES_SHARES_PATH . '/' . $this->getDropboxRoot() . $this->_preparePath($path);
-        
+
         $request = $this->_post($uri);
-        
+
         return $request->getBody();
     }
-    
+
     /**
      * @param string $path
      * @return string json
@@ -368,14 +390,14 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     public function fileMedia($path)
     {
         $this->_init();
-        
+
         $uri = self::BASE_URI_API . self::FILES_MEDIA_PATH . '/' . $this->getDropboxRoot() . $this->_preparePath($path);
-        
+
         $request = $this->_post($uri);
-        
+
         return $request->getBody();
     }
-    
+
     /**
      * @param string $path
      * @param string $format
@@ -386,26 +408,26 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     public function fileThumbnails($path, $format = 'jpeg', $size = 'small')
     {
         $this->_init();
-        
+
         $formatOptions = array( 'jpeg', 'png' );
         $sizeOptions   = array( 'small', 'medium', 'large', 's', 'm', 'l', 'xl');
-        
+
         if(! in_array(strtolower($format), $formatOptions) || ! in_array(strtolower($size), $sizeOptions)) {
             throw new Zend_Oauth_Exception(sprintf("Invalid parameter value format '%s' or size '%s'", $format, $size));
         }
-        
+
         $uri = self::BASE_URI_CONTENT . self::FILES_THUMBNAILS_PATH . '/' . $this->getDropboxRoot() . $this->_preparePath($path);
-        
+
         $params = array(
             'format' => $format,
             'size'   => $size
         );
-        
+
         $request = $this->_get($uri, $params);
-        
+
         return $request;
     }
-    
+
     /**
      * @param string $from_path
      * @param string $to_path
@@ -415,20 +437,20 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     public function fileOpsCopy($from_path, $to_path)
     {
         $this->_init();
-        
+
         $uri = self::BASE_URI_API . self::FILEOPS_COPY_PATH;
-        
+
         $params = array(
             'root'      => $this->getDropboxRoot(),
             'from_path' => $this->_preparePath($from_path),
             'to_path'   => $this->_preparePath($to_path),
         );
-        
+
         $request = $this->_post($uri, $params);
-        
+
         return $request->getBody();
     }
-    
+
     /**
      * @param string $path
      * @return string json
@@ -437,19 +459,19 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     public function fileOpsCreateFolder($path)
     {
         $this->_init();
-        
+
         $uri = self::BASE_URI_API . self::FILEOPS_CREATE_FOLDER_PATH;
-        
+
         $params = array(
             'root' => $this->getDropboxRoot(),
             'path' => $this->_preparePath($path)
         );
-        
+
         $request = $this->_post($uri, $params);
-        
+
         return $request->getBody();
     }
-    
+
     /**
      * @param string $path
      * @return string json
@@ -458,19 +480,19 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     public function fileOpsDelete($path)
     {
         $this->_init();
-        
+
         $uri = self::BASE_URI_API . self::FILEOPS_DELETE_PATH;
-        
+
         $params = array(
             'root' => $this->getDropboxRoot(),
             'path' => $this->_preparePath($path)
         );
-        
+
         $request = $this->_post($uri, $params);
-        
+
         return $request->getBody();
     }
-    
+
     /**
      * @param string $from_path
      * @param string $to_path
@@ -480,20 +502,20 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     public function fileOpsMove($from_path, $to_path)
     {
         $this->_init();
-        
+
         $uri = self::BASE_URI_API . self::FILEOPS_MOVE_PATH;
-        
+
         $params = array(
             'root'      => $this->getDropboxRoot(),
             'from_path' => $this->_preparePath($from_path),
             'to_path'   => $this->_preparePath($to_path),
         );
-        
+
         $request = $this->_post($uri, $params);
-        
+
         return $request->getBody();
     }
-    
+
     /**
      * Initialize HTTP authentication
      *
@@ -504,10 +526,10 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
         if (! $this->isAuthorised()) {
             throw new Zend_Oauth_Exception('Unauthorized Oauth Request.');
         }
-        
+
         $client = $this->getLocalHttpClient();
         $client->resetParameters();
-        
+
         if (null == $this->_cookieJar) {
             $client->setCookieJar();
             $this->_cookieJar = $client->getCookieJar();
@@ -515,7 +537,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
             $client->setCookieJar($this->_cookieJar);
         }
     }
-    
+
     /**
      * Method overloading
      *
@@ -533,7 +555,7 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
             return $return;
         }
     }
-    
+
     /**
      * Eliminate relative path and double slash
      * 
@@ -550,12 +572,12 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
         if ($path[0] !== '/') {
             $path = '/' . $path;
         }
-        
+
         $path = preg_replace(array("([\.]+[!\w+\.][^\.\w+])", "([\/]+)"), '/', $path);
-        
+
         return $path;
     }
-    
+
     /**
      * @param string $uri
      * @param array $params
@@ -564,12 +586,12 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     protected function _get($uri, $params = array())
     {
         $get = $this->getLocalHttpClient()
-                    ->setUri($uri)
-                    ->setParameterGet($params);
-        
+            ->setUri($uri)
+            ->setParameterGet($params);
+
         return $get->request(Zend_Oauth_Client::GET);
     }
-    
+
     /**
      * @param string $uri
      * @param array $params
@@ -578,9 +600,9 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
     protected function _post($uri, $params = array())
     {
         $post = $this->getLocalHttpClient()
-                     ->setUri($uri)
-                     ->setParameterPost($params);
-        
+            ->setUri($uri)
+            ->setParameterPost($params);
+
         return $post->request(Zend_Oauth_Client::POST);
     }
 }
