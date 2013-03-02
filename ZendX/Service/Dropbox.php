@@ -575,6 +575,8 @@ class ZendX_Service_Dropbox extends Zend_Rest_Client
 
         $path = preg_replace(array("([\.]+[!\w+\.][^\.\w+])", "([\/]+)"), '/', $path);
 
+        $path = str_replace('%2F', '/', rawurlencode($path));
+
         return $path;
     }
 
